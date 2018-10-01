@@ -23,7 +23,7 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
   muni_raw <- readOGR(paste(geo_path, 'SS_municipio.shp', sep=''))
   muni <- gSimplify(muni_raw, tol=0.01, topologyPreserve=TRUE)
   muni <- fortify(muni)
-  sites <- readOGR(paste(geo_path, 'sites.shp', sep=''))
+  sites <- readOGR(paste(geo_path, 'Sites.shp', sep=''))
   sites.clip <- sites[ch, ]
   sites.clip <- as.data.frame(sites.clip)
   colnames(sites.clip) <- c("Name", "comment", "Easting", "Northing")
@@ -88,15 +88,17 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
   
   ## Son Servera area and convex hull
   inset <- ggplot(muni) + ggtitle(paste('àrea analitzada')) +
-    geom_polygon(data=muni, aes(x=long, y=lat, group=group), alpha=0.1) +
-    geom_polygon(data=ch, aes(x=long, y=lat, group=group), 
+    geom_polygon(data=muni, aes(x=long, y=lat, group=group), alpha=0.1) +  # Son Servera outline
+    geom_polygon(data=ch, aes(x=long, y=lat, group=group),  # convex hull used in analysis
                  color='darkgray', alpha=0.7, fill=NA, size=0.4) +
-    geom_polypath(data=fields, aes(x=long, y=lat, group=group), alpha=0.5,
+    geom_polypath(data=fields, aes(x=long, y=lat, group=group), alpha=0.5,  # buffered fields
                   color=NA, fill='gray75', size=0.1) +
-    # geom_polygon(data=fields, aes(x=long, y=lat, group=group), alpha=0.5,
-    #              color=NA, fill='gray75', size=0.1) +
-    geom_segment(aes(x=x3, y=y3, xend=x4, yend=y4), color='lightgray', size=0.3) +
-    geom_text(aes(x=mean(c(x3,x4)), y=y3+200, label='2km'), size=3, color='lightgray') +
+    # geom_point(data=sites.clip, aes(x=Easting, y=Northing),  # site locations
+    #            size=1, alpha=0.7, shape=3) +
+    geom_segment(aes(x=x3, y=y3, xend=x4, yend=y4),   # scale bar
+                 color='lightgray', size=0.3) +
+    geom_text(aes(x=mean(c(x3,x4)), y=y3+200, label='2km'),  # scale bar label
+              size=3, color='lightgray') +
     coord_equal() +
     theme_map() +
     theme(plot.title = element_text(hjust = 0.5),
@@ -113,22 +115,26 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
   for (i in 1:length(densities)){
     d <- densities[[i]]
     r <- raster(d)
-    dm <- mask(r, fields)
-    raster_spdf <- as(dm, "SpatialPixelsDataFrame")
+    # dm <- mask(r, fields)
+    # raster_spdf <- as(dm, "SpatialPixelsDataFrame")
+    raster_spdf <- as(r, "SpatialPixelsDataFrame")
     raster_df <- as.data.frame(raster_spdf)
     colnames(raster_df) <- c("value", "x", "y")
     
     p <- ggplot() + ggtitle(paste('r = ',sigmas[i],'m')) +
-      geom_tile(data=raster_df, aes(x=x, y=y, fill=value), alpha=0.8) +
-      geom_polygon(data=fields, aes(x=long, y=lat, group=group), alpha=1.0, 
-                   color='black', fill=NA, size=0.1) +
-      geom_point(data=sites.clip, aes(x=Easting, y=Northing), size=1, alpha=0.7,
-                 shape=3) +
-      geom_text_repel(data=sites.clip, aes(x=Easting, y=Northing, label=Name),
+      geom_tile(data=raster_df, aes(x=x, y=y, fill=value), alpha=0.8) +  # KDE result
+      # geom_polygon(data=fields, aes(x=long, y=lat, group=group),  # fields outline
+      #              alpha=1.0, color='black', fill=NA, size=0.1) +
+      geom_point(data=sites.clip, aes(x=Easting, y=Northing),  # site locations
+                 size=1, alpha=0.7, shape=3) +
+      geom_text_repel(data=sites.clip, aes(x=Easting, y=Northing, label=Name),  # site labels
                       segment.color='lightgray', size=3, alpha=0.5) +
-      geom_segment(aes(x=x1, y=y1, xend=x2, yend=y2), color='gray', size=0.3) +
-      geom_text(aes(x=mean(c(x1, x2)), y=y1+150, label='1km'), size=3, color='gray') +
-      scale_fill_gradientn(colours= pal, breaks=seq(0,max(d),length.out=10),
+      geom_segment(aes(x=x1, y=y1, xend=x2, yend=y2),  # scale bar
+                   color='gray', size=0.3) +
+      geom_text(aes(x=mean(c(x1, x2)), y=y1+150, label='1km'),  # scale bar text
+                size=3, color='gray') +
+      scale_fill_gradientn(colours= pal,                       # density legend
+                           breaks=seq(0,max(d),length.out=10),
                            labels=sprintf("%0.4f", seq(0,max(d),length.out=10)),
                            guide = guide_legend(title=NULL, direction="vertical",
                                                 ncol=1, label.position="right",
@@ -159,7 +165,7 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
 }
 
 
-for (fn in list.files('../data/prods/')[1]){
-  title <- sub('.csv', '', fn, fixed=TRUE)  # drop .csv
-  kde_per_production(fn, title)
-}
+# for (fn in list.files('../data/prods/')[1]){
+#   title <- sub('.csv', '', fn, fixed=TRUE)  # drop .csv
+#   kde_per_production(fn, title, outpath='../outputs/tests/')
+# }
