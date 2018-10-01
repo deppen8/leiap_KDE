@@ -1,3 +1,4 @@
+library(here)
 library(rgdal)
 library(rgeos)
 library(maptools)
@@ -15,20 +16,18 @@ library(ggrepel)
 library(ggsn)
 library(ggpolypath)
 
-kde_per_production <- function(prod_file, title, outpath = '../outputs/productions/',
-                               geo_path='../data/geo/',
-                               prod_path='../data/prods/'){
-  pts <- read.csv(paste(prod_path, prod_file, sep=''))
-  ch <- shapefile(paste(geo_path, 'convex_hull_2018.shp', sep=''))
-  muni_raw <- readOGR(paste(geo_path, 'SS_municipio.shp', sep=''))
+kde_per_production <- function(prod_file, title){
+  pts <- read.csv(here('data', 'prods', prod_file))
+  ch <- shapefile(here('data', 'geo', 'convex_hull_2018.shp'))
+  muni_raw <- readOGR(here('data', 'geo', 'SS_municipio.shp'))
   muni <- gSimplify(muni_raw, tol=0.01, topologyPreserve=TRUE)
   muni <- fortify(muni)
-  sites <- readOGR(paste(geo_path, 'Sites.shp', sep=''))
+  sites <- readOGR(here('data', 'geo', 'known_sites_6_28_18.shp'))
   sites.clip <- sites[ch, ]
   sites.clip <- as.data.frame(sites.clip)
   colnames(sites.clip) <- c("Name", "comment", "Easting", "Northing")
   
-  fields <- readOGR(paste(geo_path, 'geo_fields_dissolve.shp', sep=''))
+  fields <- readOGR(here('data', 'geo', 'geo_fields_dissolve.shp'))
   fields <- fields[ch, ]
   
   ch.poly <- as(ch, "SpatialPolygons")
@@ -158,14 +157,14 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
   }
   
   # Save plot outputs in a grid
-  png(filename = paste(outpath, title, '.png', sep=''), 
-      width = 14, height = 8, units = 'in', res = 100)
+  png(filename = here('outputs', 'tests', paste(title, '.png', sep='')), 
+      width = 14, height = 8, units = 'in', res = 300)
   grid.arrange(kde[[1]], kde[[2]], text_plot, kde[[3]], kde[[4]], inset, ncol=3, nrow=2)
   dev.off()
 }
 
 
-# for (fn in list.files('../data/prods/')[1]){
-#   title <- sub('.csv', '', fn, fixed=TRUE)  # drop .csv
-#   kde_per_production(fn, title, outpath='../outputs/tests/')
-# }
+for (fn in list.files(here('data', 'prods'))[1]){
+  title <- sub('.csv', '', fn, fixed=TRUE)  # drop .csv
+  kde_per_production(fn, title)
+}
