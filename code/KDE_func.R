@@ -13,6 +13,7 @@ library(scales)
 library(ggthemes)
 library(ggrepel)
 library(ggsn)
+library(ggpolypath)
 
 kde_per_production <- function(prod_file, title, outpath = '../outputs/productions/',
                                geo_path='../data/geo/',
@@ -90,8 +91,10 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
     geom_polygon(data=muni, aes(x=long, y=lat, group=group), alpha=0.1) +
     geom_polygon(data=ch, aes(x=long, y=lat, group=group), 
                  color='darkgray', alpha=0.7, fill=NA, size=0.4) +
-    geom_polygon(data=fields, aes(x=long, y=lat, group=group), alpha=0.5,
-                 color=NA, fill='gray75', size=0.1) +
+    geom_polypath(data=fields, aes(x=long, y=lat, group=group), alpha=0.5,
+                  color=NA, fill='gray75', size=0.1) +
+    # geom_polygon(data=fields, aes(x=long, y=lat, group=group), alpha=0.5,
+    #              color=NA, fill='gray75', size=0.1) +
     geom_segment(aes(x=x3, y=y3, xend=x4, yend=y4), color='lightgray', size=0.3) +
     geom_text(aes(x=mean(c(x3,x4)), y=y3+200, label='2km'), size=3, color='lightgray') +
     coord_equal() +
@@ -156,7 +159,7 @@ kde_per_production <- function(prod_file, title, outpath = '../outputs/productio
 }
 
 
-for (fn in list.files(prod_path)){
+for (fn in list.files('../data/prods/')[1]){
   title <- sub('.csv', '', fn, fixed=TRUE)  # drop .csv
   kde_per_production(fn, title)
 }
