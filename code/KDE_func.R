@@ -14,10 +14,9 @@ library(ggthemes)
 library(ggrepel)
 library(ggsn)
 
-geo_path <- '../data/geo/'
-prod_path <- '../data/prods/'
-
-kde_per_production <- function(prod_file, title, outfn){
+kde_per_production <- function(prod_file, title, outpath = '../outputs/productions/',
+                               geo_path='../data/geo/',
+                               prod_path='../data/prods/'){
   pts <- read.csv(paste(prod_path, prod_file, sep=''))
   ch <- shapefile(paste(geo_path, 'convex_hull_2018.shp', sep=''))
   muni_raw <- readOGR(paste(geo_path, 'SS_municipio.shp', sep=''))
@@ -150,7 +149,14 @@ kde_per_production <- function(prod_file, title, outfn){
   }
   
   # Save plot outputs in a grid
-  png(filename = outfn, width = 14, height = 8, units = 'in', res = 100)
+  png(filename = paste(outpath, title, '.png', sep=''), 
+      width = 14, height = 8, units = 'in', res = 100)
   grid.arrange(kde[[1]], kde[[2]], text_plot, kde[[3]], kde[[4]], inset, ncol=3, nrow=2)
   dev.off()
+}
+
+
+for (fn in list.files(prod_path)){
+  title <- sub('.csv', '', fn, fixed=TRUE)  # drop .csv
+  kde_per_production(fn, title)
 }
