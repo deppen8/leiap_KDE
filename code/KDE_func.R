@@ -22,10 +22,10 @@ kde_per_production <- function(prod_file, title){
   muni_raw <- readOGR(here('data', 'geo', 'SS_municipio.shp'))
   muni <- gSimplify(muni_raw, tol=0.01, topologyPreserve=TRUE)
   muni <- fortify(muni)
-  sites <- readOGR(here('data', 'geo', 'known_sites_6_28_18.shp'))
+  sites <- readOGR(here('data', 'geo', 'known_sites.shp'))
   sites.clip <- sites[ch, ]
   sites.clip <- as.data.frame(sites.clip)
-  colnames(sites.clip) <- c("Name", "comment", "Easting", "Northing")
+  colnames(sites.clip) <- c("Name", "Northing", "Easting")
   
   fields <- readOGR(here('data', 'geo', 'geo_fields_dissolve.shp'))
   fields <- fields[ch, ]
@@ -158,7 +158,7 @@ kde_per_production <- function(prod_file, title){
   
   # Save plot outputs in a grid
   png(filename = here('outputs', 'tests', paste(title, '.png', sep='')), 
-      width = 14, height = 8, units = 'in', res = 300)
+      width = 14, height = 8, units = 'in', res = 100)
   grid.arrange(kde[[1]], kde[[2]], text_plot, kde[[3]], kde[[4]], inset, ncol=3, nrow=2)
   dev.off()
 }
